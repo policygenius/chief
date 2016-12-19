@@ -9,7 +9,7 @@ A simple command pattern for Ruby.
 
 A `Chief::Command`'s primary interface is the `.call` method, executes the command and returns a `Chief::Result` instance.
 
-A `Chief::Result` encapsulates whether the command succeeding, including the return values and (optionally) any errors encountered.
+A `Chief::Result` encapsulates whether the command succeeded, including the return values and (optionally) any errors encountered.
 
 Suppose we have an ExampleApplication, that needs to notify an external service with a message. First, we create the command:
 
@@ -49,6 +49,15 @@ module ExampleApplication
   end
 end
 ```
+
+You can use destructuring assignment to easily grab the value and the errors.
+
+
+```
+result, value, errors = ExampleApplication::SomeExternalService::Notify.call(message)
+```
+
+
 
 ## Installation
 
