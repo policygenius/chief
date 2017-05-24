@@ -1,7 +1,7 @@
 module Chief
   class Command
-    def self.call(*args)
-      new(*args).call
+    def self.call(*args, &block)
+      new(*args, &block).call
     end
 
     def self.value(*args)
