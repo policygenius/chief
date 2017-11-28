@@ -3,6 +3,7 @@
 A simple command pattern for Ruby.
 
 [![Code Climate](https://codeclimate.com/github/policygenius/chief/badges/gpa.svg)](https://codeclimate.com/github/policygenius/chief)
+[![Build Status](https://travis-ci.org/policygenius/chief.svg?branch=master)](https://travis-ci.org/policygenius/chief)
 
 
 ## Usage
