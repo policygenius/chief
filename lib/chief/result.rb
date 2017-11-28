@@ -2,7 +2,7 @@ module Chief
   class Result
     attr_reader :value, :errors
 
-    def initialize(value, errors)
+    def initialize(value, errors = nil)
       @value = value
       @errors = errors
     end
