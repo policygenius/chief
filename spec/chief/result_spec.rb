@@ -44,6 +44,13 @@ module Chief
           expect(result.success?).to be_truthy
         end
       end
+
+      context 'when the Result is not given an error' do
+        it 'returns true' do
+          result = Result.new(some_value)
+          expect(result.success?).to be_truthy
+        end
+      end
     end
 
     describe '#value' do
