@@ -25,7 +25,31 @@ module Chief
     end
   end
 
+  class ExampleWithoutChiefResultCommand < Command
+    def call
+      :some_value
+    end
+  end
+
+  class ExampleWithChiefResultPassThroughCommand < Command
+    def call
+      ExampleFailingCommand.call(:some_value)
+    end
+  end
+
   RSpec.describe Command do
+    describe "Commands that don't return a Chief::Result object" do
+      it 'should raise an error' do
+        expect { ExampleWithoutChiefResultCommand.call }.to raise_error(RuntimeError)
+      end
+    end
+
+    describe 'Commands that pass through a different commands Chief::Result object' do
+      it 'should raise an error' do
+        expect { ExampleWithChiefResultPassThroughCommand.call }.to raise_error(RuntimeError, /ExampleWithChiefResultPassThroughCommand/)
+      end
+    end
+
     describe 'Commands that execute successfully' do
       it 'returns a success result object' do
         result = ExampleSuccessfulCommand.call(:some_value)

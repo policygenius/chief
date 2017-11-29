@@ -58,6 +58,25 @@ You can use destructuring assignment to easily grab the value and the errors.
 result, value, errors = ExampleApplication::SomeExternalService::Notify.call(message)
 ```
 
+## Things to consider
+
+* A `Chief::Command` must call `success!` or `fail!`. We think this leads to better code so we enforce it.
+
+```ruby
+irb(main):001:0> class ExampleCommand < Chief::Command
+irb(main):002:1>   def call
+irb(main):003:2>     nil
+irb(main):004:2>   end
+irb(main):005:1> end
+=> :call
+irb(main):006:0> ExampleCommand.call
+RuntimeError: ExampleCommand must call success! or fail! and return the result
+        from ../chief/lib/chief/command.rb:9:in `call'
+        from (irb):6
+        from bin/console:14:in `<main>'
+```
+
+
 
 
 ## Installation
