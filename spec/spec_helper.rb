@@ -1,3 +1,4 @@
+require 'pry'
 require 'chief'
 
 RSpec.configure do |config|
