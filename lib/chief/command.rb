@@ -1,13 +1,14 @@
 module Chief
   class Command
+    def self.new(*args, &block)
+      obj = super
+      internal_command = InternalCommand.new(obj)
+      obj.send(:internal_command=, internal_command)
+      internal_command
+    end
+
     def self.call(*args, &block)
-      instance = new(*args, &block)
-      result = instance.call
-      if result.is_a?(Chief::Result) && instance.send(:created_result_object)
-        result
-      else
-        fail "#{method(__method__).receiver} must call success! or fail! and return the result"
-      end
+      new(*args, &block).call
     end
 
     def self.value(*args)
@@ -19,20 +20,47 @@ module Chief
     end
 
     def success!(value = true)
-      create_result_object(value, nil)
+      internal_command.success!
+      Result.new(value, nil)
     end
 
     def fail!(value = false, errors = true)
-      create_result_object(value, errors)
+      internal_command.fail!
+      Result.new(value, errors)
     end
 
     private
 
-    attr_reader :created_result_object
-
-    def create_result_object(value, errors)
-      @created_result_object = true
-      Result.new(value, errors)
-    end
+    attr_accessor :internal_command
   end
+
+  class InternalCommand
+    def initialize(obj)
+      @obj = obj
+      @fullfilled = false
+    end
+
+    def call
+      result = obj.call
+      if result.is_a?(Chief::Result) && fullfilled
+        result
+      else
+        fail "#{obj.class}#call must call success! or fail! and return the result"
+      end
+    end
+
+    def success!
+      self.fullfilled = true
+    end
+
+    def fail!
+      self.fullfilled = true
+    end
+
+    private
+
+    attr_reader :obj
+    attr_accessor :fullfilled
+  end
+  private_constant :InternalCommand
 end
