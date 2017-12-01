@@ -1,87 +1,146 @@
 require 'spec_helper'
 
-module Chief
-  RSpec.describe Command do
-    describe '#success!' do
-      subject(:command) { Command.new }
-      let(:successful_result) { double(:successful_result) }
+module Example
+  class SuccessfulCommand < Chief::Command
+    attr_reader :example_param
 
-      context 'when it is called without specifying a value' do
-        before do
-          allow(Result)
-            .to receive(:new)
-            .with(true, nil)
-            .and_return(successful_result)
-        end
-
-        it 'returns a Result with a default value of true' do
-          expect(command.success!).to eq successful_result
-        end
-      end
-
-      context 'when it is called with a value' do
-        let(:example_value) { double(:example_value) }
-
-        before do
-          allow(Result)
-            .to receive(:new)
-            .with(example_value, nil)
-            .and_return(successful_result)
-        end
-
-        it 'returns a Result with the specified value' do
-          expect(command.success!(example_value)).to be successful_result
-        end
-      end
+    def initialize(example_param)
+      @example_param = example_param
     end
 
-    describe '.fail!' do
-      subject(:command) { Command.new }
-      let(:failed_result) { double(:failed_result) }
+    def call
+      success!(example_param)
+    end
+  end
 
-      context 'when it is called without specifying the value nor the errors' do
-        before do
-          allow(Result)
-            .to receive(:new)
-            .with(false, true)
-            .and_return(failed_result)
-        end
+  class FailingCommand < Chief::Command
+    attr_reader :example_param
 
-        it 'returns a Result with a false value with errors set to true' do
-          expect(command.fail!).to be failed_result
-        end
+    def initialize(example_param)
+      @example_param = example_param
+    end
+
+    def call
+      fail!(:some_value, :some_errors_object)
+    end
+  end
+
+  class CommandWithoutChiefResult < Chief::Command
+    def call
+      :some_value
+    end
+  end
+
+  class CommandWithChiefResultPassThrough < Chief::Command
+    def call
+      FailingCommand.call(:some_value)
+    end
+  end
+
+  class InitializedWithBlockCommand < Chief::Command
+    attr_accessor :result
+
+    def initialize
+      yield self
+    end
+
+    def call
+      success! result
+    end
+  end
+
+  class CommandWithoutCall < Chief::Command
+  end
+end
+
+describe Chief::Command do
+  describe "Commands that don't return a Chief::Result object" do
+    it 'should raise an error' do
+      expect { Example::CommandWithoutChiefResult.call }.to raise_error(RuntimeError)
+    end
+  end
+
+  describe 'Commands that pass through a different commands Chief::Result object' do
+    it 'should raise an error' do
+      expect { Example::CommandWithChiefResultPassThrough.call }.to raise_error(RuntimeError, /Example::CommandWithChiefResultPassThrough/)
+    end
+  end
+
+  describe "Commands that are instantiated with new and don't return a Chief::Result object" do
+    it 'should raise an error' do
+      expect { Example::CommandWithoutChiefResult.new.call }.to raise_error(RuntimeError)
+    end
+  end
+
+  describe "Commands that are instantiated with new and don't pass through a different commands Chief::Result object" do
+    it 'should raise an error' do
+      expect { Example::CommandWithChiefResultPassThrough.new.call }.to raise_error(RuntimeError, /Example::CommandWithChiefResultPassThrough/)
+    end
+  end
+
+  describe 'Commands that execute successfully' do
+    it 'returns a success result object' do
+      result = Example::SuccessfulCommand.call(:some_value)
+
+      expect(result).to be_a Chief::Result
+      expect(result).to be_success
+      expect(result.value).to eq :some_value
+    end
+
+    it 'allows the result to be easily destructured' do
+      result, value, errors = Example::SuccessfulCommand.call(:some_value)
+
+      expect(result).to be_a Chief::Result
+      expect(result).to be_success
+      expect(value).to eq :some_value
+      expect(errors).to be_nil
+    end
+  end
+
+  describe 'Commands that fail' do
+    it 'returns a failed result object' do
+      result = Example::FailingCommand.call(:some_value)
+
+      expect(result).to be_a Chief::Result
+      expect(result).to be_failure
+      expect(result.value).to eq :some_value
+    end
+
+    it 'allows the result to be easily destructured' do
+      result, value, errors = Example::FailingCommand.call(:some_value)
+
+      expect(result).to be_a Chief::Result
+      expect(result).to be_failure
+      expect(value).to eq :some_value
+      expect(errors).to eq :some_errors_object
+    end
+  end
+
+  describe 'Commands when given blocks' do
+    it 'should correctly evaluate the block when called with .new' do
+      result = Example::InitializedWithBlockCommand.new do |c|
+        c.result = 'foo'
+      end.call
+
+      expect(result).to be_a Chief::Result
+      expect(result).to be_success
+      expect(result.value).to eq 'foo'
+    end
+
+    it 'should correctly evaluate the block when called with .call' do
+      result = Example::InitializedWithBlockCommand.call do |c|
+        c.result = 'foo'
       end
 
-      context 'when it is called with a value but without specifying the errors' do
-        let(:example_value) { double(:example_value) }
+      expect(result).to be_a Chief::Result
+      expect(result).to be_success
+      expect(result.value).to eq 'foo'
+    end
+  end
 
-        before do
-          allow(Result)
-            .to receive(:new)
-            .with(example_value, true)
-            .and_return(failed_result)
-        end
-
-        it 'returns a Result with a false value with errors set to true' do
-          expect(command.fail!(example_value)).to be failed_result
-        end
-      end
-
-      context 'when it is called with a value and an errors object' do
-        let(:example_value) { double(:example_value) }
-        let(:example_errors) { double(:example_errors) }
-
-        before do
-          allow(Result)
-            .to receive(:new)
-            .with(example_value, example_errors)
-            .and_return(failed_result)
-        end
-
-        it 'returns a Result with the specified value and errors' do
-          expect(command.fail!(example_value, example_errors)).to be failed_result
-        end
-      end
+  describe 'Commands without a #call method' do
+    it 'should raise a NoMethodError' do
+      expect { Example::CommandWithoutCall.call }.to raise_error(NoMethodError)
     end
   end
 end
