@@ -83,7 +83,7 @@ describe Chief::Command do
       result = Example::SuccessfulCommand.call(:some_value)
 
       expect(result).to be_a Chief::Result
-      expect(result).to be_success
+      expect(result).to be_successful
       expect(result.value).to eq :some_value
     end
 
