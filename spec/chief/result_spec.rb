@@ -53,6 +53,35 @@ module Chief
       end
     end
 
+    describe '#successful?' do
+      let(:some_value) { double(:some_value) }
+
+      context 'when the Result has errors' do
+        let(:some_errors) { double(:some_errors) }
+
+        it 'returns false' do
+          result = Result.new(some_value, some_errors)
+          expect(result.successful?).to be_falsey
+        end
+      end
+
+      context 'when the Result does not have errors' do
+        let(:some_errors) { nil }
+
+        it 'returns true' do
+          result = Result.new(some_value, some_errors)
+          expect(result.successful?).to be_truthy
+        end
+      end
+
+      context 'when the Result is not given an error' do
+        it 'returns true' do
+          result = Result.new(some_value)
+          expect(result.successful?).to be_truthy
+        end
+      end
+    end
+
     describe '#value' do
       let(:some_value) { double(:some_value) }
       let(:some_errors) { double(:some_errors) }

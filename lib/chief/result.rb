@@ -10,6 +10,7 @@ module Chief
     def success?
       errors.nil?
     end
+    alias successful? success?
 
     def failure?
       !success?
