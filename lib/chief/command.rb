@@ -1,11 +1,11 @@
 module Chief
   class Command
-    def self.call(*args, &block)
-      new(*args, &block).call
+    def self.call(*args, **kwargs, &block)
+      new(*args, **kwargs, &block).call
     end
 
-    def self.value(*args, &block)
-      call(*args, &block).value
+    def self.value(*args, **kwargs, &block)
+      call(*args, **kwargs, &block).value
     end
 
     def self.inherited(subclass)
